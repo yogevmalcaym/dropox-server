@@ -1,67 +1,70 @@
 #!/usr/bin/env node
+const path = require("path");
+const config = require("./config.json");
 
-const WebSocketServer = require('websocket').server;
-const http = require('http');
+global.sharedFolderPath = path.join(__dirname, config.sharedFolderName);
 
-const config = require('./config.json');
+const wsServer = require("./services/wsServer").wsServer;
+const utils = require("./services/utils");
+const messageHandlers = require("./services/messageHandlers");
+const files = require("./services/files");
 
-const server = http.createServer((request, response) => {
-    console.log((new Date()) + ' Received request for ' + request.url);
-    response.writeHead(404);
-    response.end();
-});
-
-server.listen(8080, () => {
-    console.log((new Date()) + ' Server is listening on port 8080');
-});
-
-wsServer = new WebSocketServer({
-    httpServer: server,
-    //Sets autoAcceptConnections to false for future connections validation 
-    autoAcceptConnections: false
-});
+const wsServerSession = new wsServer().session;
 
 // returns true to accept the connection only ifthe origin is allowed
 // @param `origin` string
 const originIsAllowed = origin => {
-    //Check if the origin is allowed
-    const allowed = config.allowedOrigins.includes(origin) ? true : false;
-    //TODO need to check how do I get the origin 
-    //may not be here since origin accepted only if the request is from a browser.
-    //**FOR NOW ALLOW ALWAYS**
-    return true;
-}
+	//Check if the origin is allowed
+	const allowed = config.allowedOrigins.includes(origin) ? true : false;
+	//TODO need to check how do I get the origin
+	//may not be here since origin accepted only if the request is from a browser.
+	//**FOR NOW ALLOW ALWAYS**
+	return true;
+};
 
 // Handles request for a connection from a client.
 const requestHandle = request => {
+	// Make sure only allowed origin accepted
+	if (!originIsAllowed(request.origin)) {
+		request.reject();
+		console.log(
+			new Date() + " Connection from origin " + request.origin + " rejected."
+		);
+		return;
+	}
 
-    // Make sure only allowed origin accepted
-    if (!originIsAllowed(request.origin)) {
-        request.reject();
-        console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
-        return;
-    }
+    // Handle message received event.
+    // Routes the received message to the appropriate function handler, and send back to
+	// the client the handler response.
+	// @param message {object} -> using `utf8Data` property.
+	const messageReceivedHandle = message => {
+		const { type: messageType, ...restArgs } = utils.stringToJSON(
+			message.utf8Data
+		);
+		//Operates the appropriate function handle case with the arguments that received from the client.
+		const response = messageHandlers[messageType](restArgs);
+		// Attach the client foldername to the connection instance
+		if (messageType === "mainClientFolder")
+			connection.mainClientFolder = restArgs.folderName;
 
-    const messageReceivedHandle = message => {
-        console.log("Received message: " + message.utf8Data);
-        //Send hello to the client and close the connection.
-        connection.sendUTF(new Date() + `\n Hello ${message.utf8Data}! from server `);
-        connection.close("validationDone", "handshake flow is done");
-    };
+		if (response) connection.sendUTF(utils.JSONToString(response));
+	};
 
-    const connectionClosedHandle = (reasonCode, description) => {
-        console.log((new Date()) + ' Peer ' + ' disconnected.');
-    };
+	// Handles connection closed event.
+	// @param `reasonCode` {number} -> -1 if connection still exists
+	// @param description {string}
+	const connectionClosedHandle = (reasonCode, description) => {
+		if (connection && connection.folderName)
+			files.isFolderEmpty(connection.folderName);
+		console.log(new Date() + " Peer " + " disconnected.");
+	};
 
-    //returns the established WebSocketConnection.
-    const connection = request.accept('echo-protocol');
+	//returns the established WebSocketConnection.
+	const connection = request.accept("echo-protocol");
 
-    console.log((new Date()) + ' Connection accepted.');
-    connection.on('message', messageReceivedHandle);
-    connection.on('close', () => connectionClosedHandle());
+	console.log(new Date() + " Connection accepted.");
+	connection.on("message", messageReceivedHandle);
+	connection.on("close", () => connectionClosedHandle());
+};
 
-
-
-}
-
-wsServer.on('request', requestHandle);
+wsServerSession.on("request", requestHandle);

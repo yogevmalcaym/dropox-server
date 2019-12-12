@@ -1,3 +1,5 @@
 {
-    "allowedOrigins": []
+    "allowedOrigins": [],
+    "COMMENT": "TODO change if when splitting the server and client",
+    "sharedFolderName": "sharedFolder"
 }
