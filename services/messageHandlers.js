@@ -1,13 +1,18 @@
 const files = require("./files");
 const commands = require("./commands");
+const utils = require("../shared/utils");
 
 //This module handles all the messages that arrive from the client and returns an appropriate payload object.
 //payload allways consist from `type` property and optionally additional properties.
 module.exports = {
 	// Check if the requested folder exists in sharedFolder.
 	// @param folderName {string}.
-	mainClientFolder: ({ folderName }) => {
-		const isExists = files.checkExistFolder(folderName);
+	// @param client {object} -> client instance, exists only if its not the first call of `mainClientFolder`.
+	mainClientFolder: ({ folderName }, client) => {
+		//In case the client change the requested main folder.
+		if (client) client.resetMainFolder(folderName);
+		const folderFullPath = utils.getFullPath(folderName);
+		const isExists = files.folderExists(folderFullPath);
 		let payload;
 		if (isExists)
 			payload = {
@@ -15,8 +20,8 @@ module.exports = {
 				isExists
 			};
 		else {
-			//If the folder does not exists, create new one
-			files.createMainClientFolder(folderName);
+			// If the folder does not exists, creates new one.
+			files.createMainClientFolder(folderFullPath);
 			payload = {
 				type: "clientFolderCreated"
 			};
@@ -43,11 +48,13 @@ module.exports = {
 		return payload;
 	},
 
-	// A command received, transfered to the commands module.
-	// If the command name does not exists in commands module, returns with wrongCommand flag as true.
+	// Every command that received is transfered to the commands module.
+	// If the command name does not exists in commands module, it returns with wrongCommand flag as true.
 	// @param commandData {object}.
-	command: ({ commandData }) => {
-		const response = (commands[commandData.name] && commands[commandData.name](commandData)) || {
+	// @param client {Client instance}.
+	command: ({ commandData }, client) => {
+		const response = (commands[commandData.commandName] &&
+			commands[commandData.commandName]({ data: commandData, client })) || {
 			wrongCommand: true
 		};
 		const payload = { type: "commandResponse", ...response };

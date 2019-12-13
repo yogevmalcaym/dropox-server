@@ -5,9 +5,10 @@ const config = require("./config.json");
 global.sharedFolderPath = path.join(__dirname, config.sharedFolderName);
 
 const wsServer = require("./services/wsServer").wsServer;
-const utils = require("./services/utils");
+const utils = require("./shared/utils");
 const messageHandlers = require("./services/messageHandlers");
 const files = require("./services/files");
+const Client = require("./services/Client");
 
 const wsServerSession = new wsServer().session;
 
@@ -24,6 +25,7 @@ const originIsAllowed = origin => {
 
 // Handles request for a connection from a client.
 const requestHandle = request => {
+	let client;
 	// Make sure only allowed origin accepted
 	if (!originIsAllowed(request.origin)) {
 		request.reject();
@@ -33,29 +35,33 @@ const requestHandle = request => {
 		return;
 	}
 
-    // Handle message received event.
-    // Routes the received message to the appropriate function handler, and send back to
+	// Handle message received event.
+	// Routes the received message to the appropriate function handler, and send back to
 	// the client the handler response.
 	// @param message {object} -> using `utf8Data` property.
 	const messageReceivedHandle = message => {
 		const { type: messageType, ...restArgs } = utils.stringToJSON(
 			message.utf8Data
 		);
-		//Operates the appropriate function handle case with the arguments that received from the client.
-		const response = messageHandlers[messageType](restArgs);
-		// Attach the client foldername to the connection instance
+
+		// Operates the appropriate function handle case with the arguments that received from the client.
+		// Client instance is used only in `command` and `mainClientFolder` type messages.
+		const response = messageHandlers[messageType](restArgs, client);
+
+		// For the first question's answer.
 		if (messageType === "mainClientFolder")
-			connection.mainClientFolder = restArgs.folderName;
+			if (!client) client = new Client(restArgs.folderName);
 
 		if (response) connection.sendUTF(utils.JSONToString(response));
 	};
 
 	// Handles connection closed event.
-	// @param `reasonCode` {number} -> -1 if connection still exists
-	// @param description {string}
+	// @param `reasonCode` {number} -> -1 if connection still exists.
+	// @param description {string}.
 	const connectionClosedHandle = (reasonCode, description) => {
 		if (connection && connection.folderName)
-			files.isFolderEmpty(connection.folderName);
+			//TODO if its empty, delete it.
+			files.getFolderData(connection.folderName);
 		console.log(new Date() + " Peer " + " disconnected.");
 	};
 
