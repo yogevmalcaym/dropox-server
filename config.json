@@ -1,5 +1,6 @@
 {
-    "allowedOrigins": [],
-    "COMMENT": "TODO change if when splitting the server and client",
-    "sharedFolderName": "sharedFolder"
+	"port": 8080,
+	"host": "localhost",
+	"COMMENT": "TODO change if when splitting the server and client",
+	"sharedFolderName": "sharedFolder"
 }
