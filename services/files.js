@@ -2,7 +2,7 @@ const fs = require("fs");
 
 // Module that handles any interaction with the file system.
 module.exports = {
-	folderExists: folderPath => fs.existsSync(folderPath),
+	isExists: path => fs.existsSync(path),
 	// TODO the password should be encrypt in this stage.
 	validateFolderPassword: ({ folderName, clientPassword }) => {
 		//get the password file content.
@@ -19,5 +19,6 @@ module.exports = {
 	// @param folderPath {string}.
 	getFolderData: folderPath =>
 		fs.readdirSync(folderPath, { withFileTypes: true }),
-	isFolder: folderPath => fs.lstatSync(folderPath).isDirectory()
+	isFolder: folderPath => fs.lstatSync(folderPath).isDirectory(),
+	newReadStream: path => fs.createReadStream(path)
 };

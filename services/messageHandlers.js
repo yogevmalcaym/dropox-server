@@ -12,7 +12,7 @@ module.exports = {
 		//In case the client change the requested main folder.
 		if (client) client.resetMainFolder(folderName);
 		const folderFullPath = utils.getFullPath(folderName);
-		const isExists = files.folderExists(folderFullPath);
+		const isExists = files.isExists(folderFullPath);
 		let payload;
 		if (isExists)
 			payload = {
@@ -52,9 +52,13 @@ module.exports = {
 	// If the command name does not exists in commands module, it returns with wrongCommand flag as true.
 	// @param commandData {object}.
 	// @param client {Client instance}.
-	command: ({ commandData }, client) => {
+	command: ({ commandData }, client, socket) => {
 		const response = (commands[commandData.commandName] &&
-			commands[commandData.commandName]({ data: commandData, client })) || {
+			commands[commandData.commandName]({
+				data: commandData,
+				client,
+				socket
+			})) || {
 			wrongCommand: true
 		};
 		const payload = { type: "commandResponse", ...response };

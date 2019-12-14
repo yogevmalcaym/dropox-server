@@ -53,14 +53,47 @@ module.exports = {
 			if (parentLocalPath === "") errorMessage = consts.AT_TOP;
 			else client.currentFolderPath = parentLocalPath;
 		} else {
-			const wantedFolderLocalPath = `${client.currentFolderPath}/${to}`;
+			const wantedFolderLocalPath = utils.joinPath(
+				client.currentFolderPath,
+				to
+			);
+
 			const wantedFolderFullPath = utils.getFullPath(wantedFolderLocalPath);
 			if (
-				files.folderExists(wantedFolderFullPath) &&
+				files.isExists(wantedFolderFullPath) &&
 				files.isFolder(wantedFolderFullPath)
 			) {
 				client.currentFolderPath = wantedFolderLocalPath;
 			} else errorMessage = consts.FOLDER_NOT_EXISTS_OR_A_FILE;
+		}
+		return { commandName, errorMessage };
+	},
+	download: ({
+		data: {
+			commandName,
+			data: [filePath]
+		},
+		client,
+		socket
+	}) => {
+		let errorMessage;
+		const localFilePath = utils.joinPath(client.currentFolderPath, filePath);
+		const fullFilePath = utils.getFullPath(localFilePath);
+		if (!files.isExists(fullFilePath))
+			errorMessage = `${localFilePath} not exists`;
+		else {
+			const rstream = files.newReadStream(fullFilePath);
+			rstream.pipe(socket, { end: false });
+			rstream.close();
+			rstream.on("close", () => {
+				console.log("read stream closed");
+				const payload = {
+					type: "commandResponse",
+					commandName,
+					data: { done: true }
+				};
+				socket.write(utils.JSONToString(payload));
+			});
 		}
 		return { commandName, errorMessage };
 	}
