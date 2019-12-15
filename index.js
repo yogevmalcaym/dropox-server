@@ -1,13 +1,11 @@
 #!/usr/bin/env node
-const path = require("path");
-const config = require("./config.json");
+//TODO should be change when seperating client and server
+const path = require('path');
+ require("dotenv").config({path: path.resolve(process.cwd(), 'server/.env')});
 const net = require("net");
-
+console.log("PORT: " + process.env.PORT);
 const wsServer = new net.Server();
-const PORT = config.port;
-const HOST = config.host;
-wsServer.listen({ port: PORT, host: HOST });
-global.sharedFolderPath = path.join(__dirname, config.sharedFolderName);
+wsServer.listen({ port: process.env.PORT, host: process.env.HOST });
 
 const utils = require("./shared/utils");
 const messageHandlers = require("./services/messageHandlers");
@@ -31,7 +29,7 @@ wsServer.on("connection", socket => {
 		// Operates the appropriate function handle case with the arguments that received from the client.
 		// Client instance is used only in `command` and `mainClientFolder` types.
 		// socket is used only in type `command`, commandName `download`
-		const response = messageHandlers[type](restArgs, client,socket);
+		const response = messageHandlers[type](restArgs, client, socket);
 
 		// For the first question's answer - create the client instance.
 		if (type === "mainClientFolder")
