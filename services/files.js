@@ -20,5 +20,7 @@ module.exports = {
 	getFolderData: folderPath =>
 		fs.readdirSync(folderPath, { withFileTypes: true }),
 	isFolder: folderPath => fs.lstatSync(folderPath).isDirectory(),
-	newReadStream: path => fs.createReadStream(path)
+	newReadStream: path => fs.createReadStream(path),
+	readSync: path => fs.readFileSync(path, "utf8"),
+	saveToFile: ({ path, content }) => fs.writeFileSync(path, content)
 };

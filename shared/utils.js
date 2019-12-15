@@ -8,7 +8,7 @@ module.exports = {
 	
 	//Returns new global path based at `global.sharedFolderPath`.
 	//@param itemPath {string}.
-	getFullPath: itemPath => path.join(procces.env.SHARED_FOLDER_PATH, itemPath),
+	getFullPath: itemPath => path.join(global.env.SHARED_FOLDER_PATH, itemPath),
 
 	// Returns the string splitted by the ending and the rest seperated.
 	// @param string {string}.

@@ -2,6 +2,7 @@
 //TODO should be change when seperating client and server
 const path = require('path');
  require("dotenv").config({path: path.resolve(process.cwd(), 'server/.env')});
+ global.env = process.env;
 const net = require("net");
 console.log("PORT: " + process.env.PORT);
 const wsServer = new net.Server();
