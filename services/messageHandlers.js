@@ -1,6 +1,7 @@
 const files = require("./files");
 const commands = require("./commands");
 const utils = require("../shared/utils");
+const consts = require("../shared/consts");
 
 //This module handles all the messages that arrive from the client and returns an appropriate payload object.
 //payload allways consist from `type` property and optionally additional properties.
@@ -52,14 +53,14 @@ module.exports = {
 	// If the command name does not exists in commands module, it returns with wrongCommand flag as true.
 	// @param commandData {object}.
 	// @param client {Client instance}.
-	command: ({ commandData }, client, socket) => {
+	command: ({ commandData }, client, socket) => {		
 		const response = (commands[commandData.commandName] &&
 			commands[commandData.commandName]({
 				data: commandData,
 				client,
 				socket
 			})) || {
-			wrongCommand: true
+			errorMessage: consts.WRONG_COMMAND
 		};
 		const payload = { type: "commandResponse", ...response };
 		return payload;
