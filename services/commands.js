@@ -116,16 +116,9 @@ const getFileDownloadsCount = ({ currentFolderPath, fileName, mainFolder }) => {
 
 // Module that handles commands, every method returns appropriate data to the client.
 module.exports = {
-	// @param commandName {string}.
 	// @param extra {string} -> optional.
 	// @param client {Client instance}.
-	dir: ({
-		data: {
-			commandName,
-			data: [extra]
-		},
-		client
-	}) => {
+	dir: ({ data: extra, client }) => {
 		const clientCurrentFolderFullPath = utils.getFullPath(
 			client.currentFolderPath
 		);
@@ -149,21 +142,17 @@ module.exports = {
 			folderData: folderItemsMaped,
 			extra: extraData && true
 		};
-		return { commandName, data: commandData };
+		return { data: commandData };
 	},
-	// @param data {object: {commandName {string}, data {array}}, client: {Client instance}}.
-	cd: ({
-		data: {
-			commandName,
-			data: [to]
-		},
-		client
-	}) => {
+	// Navigates the client to the requested folder.
+	// @param to {string}.
+	// @param client: {Client instance}}.
+	cd: ({ data: to, client }) => {
 		let errorMessage;
 		if (to === "..") {
 			const [_, parentLocalPath] = utils.splitStringEndAndRest(
 				client.currentFolderPath,
-				"/"
+				"\\"
 			);
 			if (parentLocalPath === "") errorMessage = consts.AT_TOP;
 			else client.currentFolderPath = parentLocalPath;
@@ -181,17 +170,15 @@ module.exports = {
 				client.currentFolderPath = wantedFolderLocalPath;
 			} else errorMessage = consts.FOLDER_NOT_EXISTS_OR_A_FILE;
 		}
-		return { commandName, errorMessage };
+		return { errorMessage };
 	},
-	download: ({
-		data: {
-			commandName,
-			data: [filePath]
-		},
-		client,
-		socket
-	}) => {
+
+	// @param filePath {string}.
+	// @param client {Client instance}.
+	// @param socket {net.Socket instance}
+	download: ({ data: filePath, client, socket }) => {
 		if (!filePath) return { errorMessage: consts.MISSING_DATA };
+		const [fileName] = utils.splitStringEndAndRest(filePath, "\\");
 
 		const localFilePath = utils.joinPath(client.currentFolderPath, filePath);
 		const fullFilePath = utils.getFullPath(localFilePath);
@@ -199,27 +186,41 @@ module.exports = {
 			return { errorMessage: `${localFilePath} not exists` };
 
 		const rstream = files.newReadStream(fullFilePath);
-		rstream.pipe(socket, { end: false });
-		rstream.close();
+		// rstream.setEncoding('utf8');
+		// rstream.on("data", data => {
+		// 	console.log(data);
+
+		// });
+		rstream.on("readable", () => {
+			// rstream.pipe(socket);
+			let chunk;
+			if ((chunk = rstream.read())) socket.write(chunk);
+		});
+		rstream.on("end", () => {
+			// rstream.unpipe(socket)
+			socket.write("done");
+		});
 		rstream.on("close", () => {
-			console.log("read stream closed");
-			const payload = {
-				type: "commandResponse",
-				commandName,
-				data: { done: true }
-			};
-			socket.write(utils.JSONToString(payload));
+			console.log("read stream closed ");
+			// const payload = {
+			// 	type: "command",
+			// 	name: "download",
+			// 	data: { done: true, fileName }
+			// };
+			// socket.write(utils.JSONToString(payload));
 			updateDownloadsFile({
 				folderName: client.mainFolderName,
 				fileLocalPath: localFilePath
 			});
 		});
-		return { commandName };
+
+		return { data:  fileName};
 	},
+
 	// Returns payload contained with help section.
 	// @param commandName {string}
-	help: ({ data: { commandName } }) => {
+	help: () => {
 		const helpData = consts.HELP;
-		return { commandName, data: helpData };
+		return { data: helpData };
 	}
 };

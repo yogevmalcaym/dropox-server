@@ -1,7 +1,5 @@
 const files = require("./files");
-const commands = require("./commands");
 const utils = require("../shared/utils");
-const consts = require("../shared/consts");
 
 //This module handles all the messages that arrive from the client and returns an appropriate payload object.
 //payload allways consist from `type` property and optionally additional properties.
@@ -32,10 +30,10 @@ module.exports = {
 
 	// Validate the folder password.
 	validatePasswordByFolder: args => {
-		const isValidate = files.validateFolderPassword(args);
+		const isValid = files.validateFolderPassword(args);
 		const payload = {
 			type: "validationRespond",
-			isValidate
+			isValid
 		};
 		return payload;
 	},
@@ -47,22 +45,6 @@ module.exports = {
 		console.log("client password: " + clientPassword);
 		const payload = { type: "passwordReserved" };
 		return payload;
-	},
-
-	// Every command that received is transfered to the commands module.
-	// If the command name does not exists in commands module, it returns with wrongCommand flag as true.
-	// @param commandData {object}.
-	// @param client {Client instance}.
-	command: ({ commandData }, client, socket) => {		
-		const response = (commands[commandData.commandName] &&
-			commands[commandData.commandName]({
-				data: commandData,
-				client,
-				socket
-			})) || {
-			errorMessage: consts.WRONG_COMMAND
-		};
-		const payload = { type: "commandResponse", ...response };
-		return payload;
 	}
+	
 };
