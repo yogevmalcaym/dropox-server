@@ -1,4 +1,3 @@
-// TODO The methods should receive commanndData object {name: "command-name", data: [array-of-data]}
 // and return an object that contains the command name also
 const path = require("path");
 const files = require("./files");
