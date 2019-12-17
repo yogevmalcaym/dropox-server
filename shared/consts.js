@@ -1,9 +1,9 @@
-module.exports = {
-	FOLDER_NOT_EXISTS_OR_A_FILE: `Requested folder either not exist or isn't a folder`,
-	AT_TOP: `You are already at your root folder`,
-	MISSING_DATA: `Missing command data, type 'help' to see your options`,
-	WRONG_COMMAND: `Wrong command, type 'help' to see available options`,
-	HELP: `
+// The consts of the application.
+export const FOLDER_NOT_EXISTS_OR_A_FILE = `Requested folder either not exist or isn't a folder`;
+export const AT_TOP = `You are already at your root folder`;
+export const MISSING_DATA = `Missing command data, type 'help' to see your options`;
+export const PASSWORD_ERROR = `An error occured, please try again`;
+export const HELP = `
 Available commands: dir, cd, download and help
 Detailed commands explenation:
 	dir:
@@ -23,5 +23,4 @@ Detailed commands explenation:
 		The downloaded file will be saved into the project directory in a folder named 'Dropox' in case you didn't change it's variable in the .evn file.
 
 If you want to see usages of above commands read ReadMe file.
-	`
-};
+	`;

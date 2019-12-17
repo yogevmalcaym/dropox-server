@@ -1,19 +1,14 @@
 #!/usr/bin/env node
-//TODO should be change when seperating client and server
-const path = require("path");
-// Make .env file to be accessible through 'process.env'.
-require("dotenv").config({ path: path.resolve(process.cwd(), "server/.env") });
-global.env = process.env;
 
-const net = require("net");
+import net from "net";
 const wsServer = new net.Server();
 wsServer.listen({ port: process.env.PORT, host: process.env.HOST });
 
-const utils = require("./shared/utils");
-const messageHandlers = require("./services/messageHandlers");
-const Client = require("./services/Client");
-const commands = require("./services/commands");
-const consts = require("./shared/consts");
+import * as acquaintance from "./services/acquaintance.js";
+import * as utils from "./shared/utils.js";
+import Client from "./services/Client.js";
+import * as commands from "./services/commands.js";
+import * as consts from "./shared/consts.js";
 
 wsServer.on("listening", () => {
 	const { port, family, address } = wsServer.address();
@@ -31,7 +26,7 @@ wsServer.on("connection", socket => {
 	// Routes the received data to the appropriate function handler, and sends back to
 	// the client the handler response.
 	// @param data {string}.
-	const dataReceivedHandler = data => {
+	const dataReceivedHandler = async data => {
 		const { type, ...restArgs } = utils.stringToJSON(data);
 
 		let payload;
@@ -50,7 +45,11 @@ wsServer.on("connection", socket => {
 			};
 			payload = { type, name, ...response };
 		} else {
-			payload = messageHandlers[type](restArgs, client, socket);
+			try {
+				payload = await acquaintance[type](restArgs, client, socket);
+			} catch (error) {
+				console.error(error);
+			}
 		}
 
 		// For the first question's answer - create the client instance.
@@ -68,7 +67,7 @@ wsServer.on("connection", socket => {
 	};
 
 	const closeHandler = hadError => {
-		console.log("Connection closed");
+		console.log("a client connection closed");
 		//TODO make sure that the client didnt left the folder without password.
 	};
 

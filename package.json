@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "name": "dropox-server",
+  "version": "1.0.0",
+  "description": "server side of dropox project",
+  "main": "index.js",
+  "repository": "git@github.com:yogevmalcaym/dropox.git",
+  "author": "Yogev Malca",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^8.2.0"
+  },
+  "scripts": {
+    "start": "node -r dotenv/config.js --experimental-modules index.js"
+  }
+}
