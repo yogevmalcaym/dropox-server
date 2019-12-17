@@ -25,37 +25,38 @@ wsServer.on("connection", socket => {
 	// Handles data event.
 	// Routes the received data to the appropriate function handler, and sends back to
 	// the client the handler response.
-	// @param data {string}.
+	// @param data {Buffer}.
 	const dataReceivedHandler = async data => {
-		const { type, ...restArgs } = utils.stringToJSON(data);
-
+		const { type, name, pdata } = utils.toJSON(data);
 		let payload;
 		if (type === "command") {
 			// Routes 'command' type data to its command handler. if there is no an appropriate hanlder, returns an errorMessage.
-			const {
-				commandData: { name, data }
-			} = restArgs;
 			const response = (commands[name] &&
 				commands[name]({
-					data,
+					data: pdata || [],
 					client,
 					socket
 				})) || {
 				errorMessage: consts.WRONG_COMMAND
 			};
+			// Same type and name will be handled at the other side.
 			payload = { type, name, ...response };
-		} else {
-			
+		}
+		if (type === "acquaintance") {
 			try {
-				payload = await acquaintance[type](restArgs, client, socket);
+				const response = await acquaintance[name]({
+					data: pdata || {},
+					client
+				});
+				// For the first question's answer - create the client instance.
+				if (name === "mainClientFolder")
+					if (!client) client = new Client(pdata || {});
+				// Attach the type prop to the payload to be handled at the other side.
+				payload = { ...response, type };
 			} catch (error) {
 				console.error(error);
 			}
 		}
-
-		// For the first question's answer - create the client instance.
-		if (type === "mainClientFolder")
-			if (!client) client = new Client(restArgs.folderName);
 
 		if (payload) socket.write(utils.JSONToString(payload));
 	};

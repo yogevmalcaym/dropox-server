@@ -7,17 +7,17 @@ import * as utils from "../shared/utils.js";
 // payload allways consist from `type` property and optionally additional properties.
 
 // Check if the requested folder exists in sharedFolder.
-// @param folderName {string}.
+// @param mainFolderName {string}.
 // @param client {object} -> client instance, exists only if its not the first call of `mainClientFolder`.
-export const mainClientFolder = ({ folderName }, client) => {
+export const mainClientFolder = ({ data: { mainFolderName }, client }) => {
 	//In case the client change the requested main folder.
-	if (client) client.resetMainFolder(folderName);
-	const folderFullPath = utils.getFullPath(folderName);
+	if (client) client.resetMainFolder(mainFolderName);
+	const folderFullPath = utils.getFullPath(mainFolderName);
 	const isExists = files.isExists(folderFullPath);
 	let payload;
 	if (isExists)
 		payload = {
-			type: "mainFolderExistance",
+			name: "mainFolderExistance",
 			isExists
 		};
 	else {
@@ -29,19 +29,22 @@ export const mainClientFolder = ({ folderName }, client) => {
 		files.createFile(passFilePath);
 
 		payload = {
-			type: "clientFolderCreated"
+			name: "clientFolderCreated"
 		};
 	}
 	return payload;
 };
 
 // Validate the folder password.
-export const validatePasswordByFolder = async ({ clientPassword }, client) => {
+export const validatePasswordByFolder = async ({
+	data: { clientPassword },
+	client
+}) => {
 	try {
 		const fullFolderPath = utils.getFullPath(client.mainFolderName);
 		const isValid = await Password.compare(fullFolderPath, clientPassword);
 		const payload = {
-			type: "validationRespond",
+			name: "validationRespond",
 			isValid
 		};
 		return payload;
@@ -52,13 +55,13 @@ export const validatePasswordByFolder = async ({ clientPassword }, client) => {
 
 //New client password for new folder received.
 //@param clientPassword {string}.
-export const newClientPassword = async ({ clientPassword }, client) => {
+export const newClientPassword = async ({data: { clientPassword }, client}) => {
 	try {
 		const hash = await new Password(clientPassword).getHash;
 		const fullFolderPath = utils.getFullPath(client.mainFolderName);
 		const passFilePath = utils.joinPath(fullFolderPath, process.env.PASS);
 		files.saveToFile(passFilePath, hash);
-		const payload = { type: "passwordReserved" };
+		const payload = { name: "passwordReserved" };
 		return payload;
 	} catch (error) {
 		console.error(error);

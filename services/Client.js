@@ -1,9 +1,9 @@
-// Module used to hold client data individually.
+// Client module holds the client data.
 export default class Client {
-	// @param mainFolder {string}.
-	constructor(mainFolder) {
-		this.mainFolder = mainFolder;
-		this.currentFolerPath = mainFolder;
+	// @param mainFolderName {string}.
+	constructor({ mainFolderName }) {
+		this.mainFolder = mainFolderName;
+		this.currentFolerPath = mainFolderName;
 	}
 	get mainFolderName() {
 		return this.mainFolder;

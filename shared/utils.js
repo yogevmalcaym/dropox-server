@@ -3,8 +3,9 @@ import path from "path";
 // Exports.
 // General utility methods.
 
-// Transfer string to JSON.
-export const stringToJSON = string => JSON.parse(string);
+// Transfer arg to JSON.
+// @param arg {string | Buffer}.
+export const toJSON = arg => JSON.parse(arg);
 
 // Transfer JSON to string.
 export const JSONToString = json => JSON.stringify(json);

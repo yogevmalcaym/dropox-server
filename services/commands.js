@@ -117,7 +117,7 @@ const getFileDownloadsCount = ({ currentFolderPath, fileName, mainFolder }) => {
 
 // @param extra {string} -> optional.
 // @param client {Client instance}.
-export const dir = ({ data: extra, client }) => {
+export const dir = ({ data: [extra], client }) => {
 	const clientCurrentFolderFullPath = utils.getFullPath(
 		client.currentFolderPath
 	);
@@ -147,7 +147,7 @@ export const dir = ({ data: extra, client }) => {
 // Navigates the client to the requested folder.
 // @param to {string}.
 // @param client: {Client instance}}.
-export const cd = ({ data: to, client }) => {
+export const cd = ({ data: [to], client }) => {
 	let errorMessage;
 	if (to === "..") {
 		const [_, parentLocalPath] = utils.splitStringEndAndRest(
@@ -173,7 +173,7 @@ export const cd = ({ data: to, client }) => {
 // @param filePath {string}.
 // @param client {Client instance}.
 // @param socket {net.Socket instance}
-export const download = ({ data: filePath, client, socket }) => {
+export const download = ({ data: [filePath], client, socket }) => {
 	if (!filePath) return { errorMessage: consts.MISSING_DATA };
 	const [fileName] = utils.splitStringEndAndRest(filePath, "\\");
 
