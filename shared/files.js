@@ -12,10 +12,6 @@ export const isExists = path => fs.existsSync(path);
 // @param folderPath {string}.
 export const createFolder = folderPath => fs.mkdirSync(folderPath);
 
-//Creates a new empty file.
-// @param path {string}.
-export const createFile = path => fs.writeFileSync(path);
-
 // Returns array of fs.Direct objects.
 // @param folderPath {string}.
 export const getFolderData = folderPath =>
@@ -45,3 +41,7 @@ export const saveToFile = (path, content) => fs.writeFileSync(path, content);
 // Return stats of the requested file.
 // @param filePath {string}.
 export const getStats = filePath => fs.statSync(filePath);
+
+// Remove a folder.
+// @param folder {string}
+export const deleteFolder = folder => fs.rmdirSync(folder);

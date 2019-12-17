@@ -4,11 +4,13 @@ import net from "net";
 const wsServer = new net.Server();
 wsServer.listen({ port: process.env.PORT, host: process.env.HOST });
 
+import Client from "./services/Client.js";
+import Password from "./services/Password.js";
 import * as acquaintance from "./services/acquaintance.js";
 import * as utils from "./shared/utils.js";
-import Client from "./services/Client.js";
 import * as commands from "./services/commands.js";
 import * as consts from "./shared/consts.js";
+import * as files from "./shared/files.js";
 
 wsServer.on("listening", () => {
 	const { port, family, address } = wsServer.address();
@@ -54,7 +56,7 @@ wsServer.on("connection", socket => {
 				// Attach the type prop to the payload to be handled at the other side.
 				payload = { ...response, type };
 			} catch (error) {
-				console.error(error);
+				console.log(error.message);
 			}
 		}
 
@@ -65,12 +67,17 @@ wsServer.on("connection", socket => {
 	// @param error {object}
 	const errorHandler = error => {
 		if (error.code === "ECONNRESET") console.log("Client disconnected");
-		else console.error(error);
+		else console.log(error.message);
 	};
 
-	const closeHandler = hadError => {
+	const closeHandler = async hadError => {
+		// Make sure that the client folder will not remain without a password file.
+		if (hadError && client) {
+			const clientFolder = utils.getFullPath(client.mainFolderName);
+			if (!Password.passFileExists(clientFolder))
+				files.deleteFolder(clientFolder);
+		}
 		console.log("a client connection closed");
-		//TODO make sure that the client didnt left the folder without password.
 	};
 
 	socket.on("error", errorHandler);

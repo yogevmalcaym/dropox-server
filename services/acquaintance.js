@@ -24,10 +24,6 @@ export const mainClientFolder = ({ data: { mainFolderName }, client }) => {
 		// If the folder does not exists, creates new one.
 		files.createFolder(folderFullPath);
 
-		// Create initial files.
-		const passFilePath = utils.joinPath(folderFullPath, process.env.PASS);
-		files.createFile(passFilePath);
-
 		payload = {
 			name: "clientFolderCreated"
 		};
@@ -49,7 +45,7 @@ export const validatePasswordByFolder = async ({
 		};
 		return payload;
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };
 
@@ -60,10 +56,11 @@ export const newClientPassword = async ({data: { clientPassword }, client}) => {
 		const hash = await new Password(clientPassword).getHash;
 		const fullFolderPath = utils.getFullPath(client.mainFolderName);
 		const passFilePath = utils.joinPath(fullFolderPath, process.env.PASS);
+
 		files.saveToFile(passFilePath, hash);
 		const payload = { name: "passwordReserved" };
 		return payload;
 	} catch (error) {
-		console.error(error);
+		console.log(error.message);
 	}
 };
