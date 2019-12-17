@@ -45,6 +45,7 @@ wsServer.on("connection", socket => {
 			};
 			payload = { type, name, ...response };
 		} else {
+			
 			try {
 				payload = await acquaintance[type](restArgs, client, socket);
 			} catch (error) {

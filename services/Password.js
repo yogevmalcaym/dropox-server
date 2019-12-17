@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { joinPath } from "../shared/utils.js";
-import { saveToFile, readSync } from "../shared/files.js";
+import { readSync } from "../shared/files.js";
 
 export default class Password {
 	constructor(password) {
