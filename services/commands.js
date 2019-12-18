@@ -3,7 +3,8 @@ import * as files from "../shared/files.js";
 import * as utils from "../shared/utils.js";
 import * as consts from "../shared/consts.js";
 
-// Maps the folder Items array to be detailed for client usage.
+// Maps the folder Items into objects.
+// Returns arary of objects.
 // @param items {array}.
 // @param extraData {object} -> optionally.
 const mapFolderItems = ({ items, extraData }) =>
@@ -115,6 +116,7 @@ const getFileDownloadsCount = ({ currentFolderPath, fileName, mainFolder }) => {
 // Exports.
 // Commands handlers, every method returns appropriate data to the client.
 
+// Elaborates folder data.
 // @param extra {string} -> optional.
 // @param client {Client instance}.
 export const dir = ({ data: [extra], client }) => {
@@ -148,6 +150,9 @@ export const dir = ({ data: [extra], client }) => {
 // @param to {string}.
 // @param client: {Client instance}}.
 export const cd = ({ data: [to], client }) => {
+	// If there is no data, returns error message.
+	if (!to) return { errorMessage: consts.MISSING_DATA };
+
 	let errorMessage;
 	if (to === "..") {
 		const [_, parentLocalPath] = utils.splitStringEndAndRest(
@@ -170,48 +175,48 @@ export const cd = ({ data: [to], client }) => {
 	return { errorMessage };
 };
 
+// Streamin wanted file to the client TODO not finished.
 // @param filePath {string}.
 // @param client {Client instance}.
 // @param socket {net.Socket instance}
 export const download = ({ data: [filePath], client, socket }) => {
+	// If there is no data, returns error message.
 	if (!filePath) return { errorMessage: consts.MISSING_DATA };
 	const [fileName] = utils.splitStringEndAndRest(filePath, "\\");
 
 	const localFilePath = utils.joinPath(client.currentFolderPath, filePath);
 	const fullFilePath = utils.getFullPath(localFilePath);
+
 	if (!files.isExists(fullFilePath))
-		return { errorMessage: `${localFilePath} not exists` };
+		return { errorMessage: consts.fileNotExists(localFilePath) };
 
 	const rstream = files.newReadStream(fullFilePath);
-	// rstream.setEncoding('utf8');
-	// rstream.on("data", data => {
-	// 	console.log(data);
 
-	// });
 	rstream.on("readable", () => {
-		// rstream.pipe(socket);
 		let chunk;
-		if ((chunk = rstream.read())) socket.write(chunk);
+		if ((chunk = rstream.read())) {
+			socket.write(utils.JSONToString({ chunk }) + "\n");
+		}
 	});
+
+	rstream.on("error", error => {
+		console.log(["[rstream] - error"]);
+	});
+
 	rstream.on("end", () => {
-		// rstream.unpipe(socket)
-		socket.write("done");
+		console.log("[rstream] - end ");
 	});
+
 	rstream.on("close", () => {
-		console.log("read stream closed ");
-		// const payload = {
-		// 	type: "command",
-		// 	name: "download",
-		// 	data: { done: true, fileName }
-		// };
-		// socket.write(utils.JSONToString(payload));
+		socket.write(utils.JSONToString({ done: true }));
+		console.log("[rstream] - close ");
 		updateDownloadsFile({
 			folderName: client.mainFolderName,
 			fileLocalPath: localFilePath
 		});
 	});
 
-	return { data: fileName };
+	return { data: { fileName } };
 };
 
 // Returns payload contained with help section.

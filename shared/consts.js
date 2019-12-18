@@ -24,3 +24,4 @@ Detailed commands explenation:
 
 If you want to see usages of above commands read ReadMe file.
 	`;
+export const fileNotExists = path => `${path} not exists`;

@@ -24,28 +24,29 @@ wsServer.on("connection", socket => {
 		"connection request arrived from client: " + socket.remoteAddress
 	);
 	let client;
+
 	// Handles data event.
 	// Routes the received data to the appropriate function handler, and sends back to
 	// the client the handler response.
 	// @param data {Buffer}.
 	const dataReceivedHandler = async data => {
-		const { type, name, pdata } = utils.toJSON(data);
-		let payload;
-		if (type === "command") {
-			// Routes 'command' type data to its command handler. if there is no an appropriate hanlder, returns an errorMessage.
-			const response = (commands[name] &&
-				commands[name]({
-					data: pdata || [],
-					client,
-					socket
-				})) || {
-				errorMessage: consts.WRONG_COMMAND
-			};
-			// Same type and name will be handled at the other side.
-			payload = { type, name, ...response };
-		}
-		if (type === "acquaintance") {
-			try {
+		try {
+			const { type, name, pdata } = utils.toJSON(data);
+			let payload;
+			if (type === "command") {
+				// Routes 'command' type data to its command handler. if there is no an appropriate hanlder, returns an errorMessage.
+				const response = (commands[name] &&
+					commands[name]({
+						data: pdata || [],
+						client,
+						socket
+					})) || {
+					errorMessage: consts.WRONG_COMMAND
+				};
+				// Same type and name will be handled at the other side.
+				payload = { type, name, ...response };
+			}
+			if (type === "acquaintance") {
 				const response = await acquaintance[name]({
 					data: pdata || {},
 					client
@@ -55,12 +56,12 @@ wsServer.on("connection", socket => {
 					if (!client) client = new Client(pdata || {});
 				// Attach the type prop to the payload to be handled at the other side.
 				payload = { ...response, type };
-			} catch (error) {
-				console.log(error.message);
 			}
-		}
 
-		if (payload) socket.write(utils.JSONToString(payload));
+			if (payload) socket.write(utils.JSONToString(payload));
+		} catch (error) {
+			console.log(error.message);
+		}
 	};
 
 	// Handles error event.
@@ -70,6 +71,7 @@ wsServer.on("connection", socket => {
 		else console.log(error.message);
 	};
 
+	// Handles socket's 'close' event.
 	const closeHandler = async hadError => {
 		// Make sure that the client folder will not remain without a password file.
 		if (hadError && client) {
@@ -77,7 +79,7 @@ wsServer.on("connection", socket => {
 			if (!Password.passFileExists(clientFolder))
 				files.deleteFolder(clientFolder);
 		}
-		console.log("a client connection closed");
+		console.log("connection closed: " + socket.remoteAddress);
 	};
 
 	socket.on("error", errorHandler);

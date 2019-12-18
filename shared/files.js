@@ -27,7 +27,8 @@ export const isFile = filePath => fs.lstatSync(filePath).isFile();
 
 // Returns fs.readable stream from the requested path.
 // @param path {string}
-export const newReadStream = path => fs.createReadStream(path);
+export const newReadStream = path =>
+	fs.createReadStream(path);
 
 // Reads data from the requested file.
 // @param path {string}.

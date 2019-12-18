@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { joinPath } from "../shared/utils.js";
 import { readSync, isExists } from "../shared/files.js";
 
+// Handles any process connection to password.
 export default class Password {
 	constructor(password) {
 		const saltRounds = 10;

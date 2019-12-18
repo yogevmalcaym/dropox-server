@@ -23,7 +23,6 @@ export const mainClientFolder = ({ data: { mainFolderName }, client }) => {
 	else {
 		// If the folder does not exists, creates new one.
 		files.createFolder(folderFullPath);
-
 		payload = {
 			name: "clientFolderCreated"
 		};
@@ -31,7 +30,9 @@ export const mainClientFolder = ({ data: { mainFolderName }, client }) => {
 	return payload;
 };
 
-// Validate the folder password.
+// Validate the folder password..
+// @param clientPassword {string}.
+// @param client {Client instance}.
 export const validatePasswordByFolder = async ({
 	data: { clientPassword },
 	client
