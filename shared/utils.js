@@ -8,7 +8,7 @@ import path from "path";
 export const toJSON = arg => JSON.parse(arg);
 
 // Transfer JSON to string.
-export const JSONToString = json => JSON.stringify(json);
+export const toString = json => JSON.stringify(json);
 
 // Join arguments to path.
 // @param args {array}.

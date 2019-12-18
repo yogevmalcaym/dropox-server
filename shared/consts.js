@@ -3,6 +3,8 @@ export const FOLDER_NOT_EXISTS_OR_A_FILE = `Requested folder either not exist or
 export const AT_TOP = `You are already at your root folder`;
 export const MISSING_DATA = `Missing command data, type 'help' to see your options`;
 export const PASSWORD_ERROR = `An error occured, please try again`;
+export const WRONG_COMMAND = `Wrong command`;
+export const NOT_ALLOWED_NAMES = `This file not allowed`;
 export const HELP = `
 Available commands: dir, cd, download and help
 Detailed commands explenation:

@@ -2,7 +2,7 @@
 
 import net from "net";
 const wsServer = new net.Server();
-wsServer.listen({ port: process.env.PORT, host: process.env.HOST });
+wsServer.listen({ port: process.env.MAIN_PORT, host: process.env.HOST });
 
 import Client from "./services/Client.js";
 import Password from "./services/Password.js";
@@ -38,8 +38,7 @@ wsServer.on("connection", socket => {
 				const response = (commands[name] &&
 					commands[name]({
 						data: pdata || [],
-						client,
-						socket
+						client
 					})) || {
 					errorMessage: consts.WRONG_COMMAND
 				};
@@ -58,7 +57,7 @@ wsServer.on("connection", socket => {
 				payload = { ...response, type };
 			}
 
-			if (payload) socket.write(utils.JSONToString(payload));
+			if (payload) socket.write(utils.toString(payload));
 		} catch (error) {
 			console.log(error.message);
 		}

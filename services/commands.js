@@ -1,4 +1,4 @@
-// and return an object that contains the command name also
+import Downloader from "../services/Downloader.js";
 import * as files from "../shared/files.js";
 import * as utils from "../shared/utils.js";
 import * as consts from "../shared/consts.js";
@@ -42,37 +42,6 @@ const mapFolderItems = ({ items, extraData }) =>
 const filterNotAllowed = items => {
 	const notAllowed = process.env.NOT_ALLOWED_NAMES.split("@");
 	return items.filter(item => !notAllowed.includes(item.name));
-};
-
-// Updates the downloads file of the client's folder.
-// @param folderName {string}
-// @param fileLocalPath {string}
-const updateDownloadsFile = ({ folderName, fileLocalPath }) => {
-	const downloadsFileLocalPath = utils.joinPath(
-		folderName,
-		process.env.DOWNLOADS_FILE_NAME
-	);
-	const downloadsFileFullPath = utils.getFullPath(downloadsFileLocalPath);
-	let downloadsFileContent = "";
-	if (files.isExists(downloadsFileFullPath))
-		downloadsFileContent = files.readSync(downloadsFileFullPath);
-
-	const fileContentSplitted = downloadsFileContent.split("\n");
-	let occured = false;
-	// Returns the content array updated at the file's row if exists.
-	const newFileContentSplitted = fileContentSplitted.map(row => {
-		if (row.includes(fileLocalPath)) {
-			const rowSplitted = row.split("=");
-			rowSplitted[1] = Number(rowSplitted[1]) + 1;
-			const stringRowUpdated = rowSplitted.join("=");
-			occured = true;
-			return stringRowUpdated;
-		}
-	});
-	// If the file didnt exist in the file, it would create new row for this file.
-	if (!occured) newFileContentSplitted.push(`${fileLocalPath}=1`);
-	const newFileContent = newFileContentSplitted.join("\n");
-	files.saveToFile(downloadsFileFullPath, newFileContent);
 };
 
 // Check the downloads count of a specific file by the downloads file.
@@ -175,48 +144,33 @@ export const cd = ({ data: [to], client }) => {
 	return { errorMessage };
 };
 
-// Streamin wanted file to the client TODO not finished.
+// Streamin wanted file to the client.
 // @param filePath {string}.
 // @param client {Client instance}.
 // @param socket {net.Socket instance}
-export const download = ({ data: [filePath], client, socket }) => {
-	// If there is no data, returns error message.
-	if (!filePath) return { errorMessage: consts.MISSING_DATA };
-	const [fileName] = utils.splitStringEndAndRest(filePath, "\\");
+export const download = ({ data: [filePath], client }) => {
+	// Creates a Downloader session.
+	new Downloader();
 
 	const localFilePath = utils.joinPath(client.currentFolderPath, filePath);
-	const fullFilePath = utils.getFullPath(localFilePath);
 
+	// In case that path didn't arrive.
+	if (!filePath) return { errorMessage: consts.MISSING_DATA };
+
+	// In case the file is not allowed.
+	if (filterNotAllowed([{ name: filePath }]).length === 0)
+		return { errorMessage: consts.NOT_ALLOWED_NAMES };
+
+	const fullFilePath = utils.getFullPath(localFilePath);
 	if (!files.isExists(fullFilePath))
 		return { errorMessage: consts.fileNotExists(localFilePath) };
 
-	const rstream = files.newReadStream(fullFilePath);
-
-	rstream.on("readable", () => {
-		let chunk;
-		if ((chunk = rstream.read())) {
-			socket.write(utils.JSONToString({ chunk }) + "\n");
+	return {
+		data: {
+			localFilePath: filePath,
+			currentFolderPath: client.currentFolderPath
 		}
-	});
-
-	rstream.on("error", error => {
-		console.log(["[rstream] - error"]);
-	});
-
-	rstream.on("end", () => {
-		console.log("[rstream] - end ");
-	});
-
-	rstream.on("close", () => {
-		socket.write(utils.JSONToString({ done: true }));
-		console.log("[rstream] - close ");
-		updateDownloadsFile({
-			folderName: client.mainFolderName,
-			fileLocalPath: localFilePath
-		});
-	});
-
-	return { data: { fileName } };
+	};
 };
 
 // Returns payload contained with help section.
